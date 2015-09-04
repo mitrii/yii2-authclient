@@ -53,6 +53,7 @@ class VKontakte extends OAuth2
      */
     public $apiBaseUrl = 'https://api.vk.com/method';
 
+    public $display = 'popup';
 
     /**
      * @inheritdoc
@@ -71,7 +72,8 @@ class VKontakte extends OAuth2
                 'city',
                 'country',
                 'timezone',
-                'photo'
+                'photo',
+                'photo_big'
             ]),
         ]);
         return array_shift($attributes['response']);

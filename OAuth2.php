@@ -64,6 +64,9 @@ class OAuth2 extends BaseOAuth
             'redirect_uri' => $this->getReturnUrl(),
             'xoauth_displayname' => Yii::$app->name,
         ];
+        if (!empty($this->display)) {
+            $defaultParams['display'] = $this->display;
+        }
         if (!empty($this->scope)) {
             $defaultParams['scope'] = $this->scope;
         }

@@ -58,12 +58,16 @@ class Facebook extends OAuth2
     public $scope = 'email';
 
 
+    public $display = 'popup';
+
     /**
      * @inheritdoc
      */
     protected function initUserAttributes()
     {
-        return $this->api('me', 'GET');
+        $profile = $this->api('me', 'GET');
+        $picture = $this->api('me', 'GET', ['fields'=>'picture.type(large)']);
+        return array_merge($profile, $picture);
     }
 
     /**

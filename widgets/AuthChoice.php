@@ -63,6 +63,9 @@ use yii\authclient\ClientInterface;
  */
 class AuthChoice extends Widget
 {
+
+    public $type = 'default';
+    public $model = 'default';
     /**
      * @var string name of the auth client collection application component.
      * This component will be used to fetch services value if it is not set.
@@ -78,7 +81,7 @@ class AuthChoice extends Widget
      * @see \yii\helpers\Html::renderTagAttributes() for details on how attributes are being rendered.
      */
     public $options = [
-        'class' => 'auth-clients'
+        //'class' => 'auth-clients'
     ];
     /**
      * @var boolean indicates if popup window should be used instead of direct links.
@@ -178,12 +181,17 @@ class AuthChoice extends Widget
     public function clientLink($client, $text = null, array $htmlOptions = [])
     {
         if ($text === null) {
-            $text = Html::tag('span', '', ['class' => 'auth-icon ' . $client->getName()]);
-            $text .= Html::tag('span', $client->getTitle(), ['class' => 'auth-title']);
+            //$text = Html::tag('span', '', ['class' => 'auth-icon ' . $client->getName()]);
+            //$text .= Html::tag('span', $client->getTitle(), ['class' => 'auth-title']);
+            $icon_name = $client->getName();
+            if ($icon_name == 'vkontakte') {
+                $icon_name = 'vk';
+            }
+            $text = '<svg class="icon"><use xlink:href="#' . $icon_name . '"></svg>';
         }
-        if (!array_key_exists('class', $htmlOptions)) {
-            $htmlOptions['class'] = 'auth-link ' . $client->getName();
-        }
+//        if (!array_key_exists('class', $htmlOptions)) {
+//            $htmlOptions['class'] = 'auth-link ' . $client->getName();
+//        }
 
         $viewOptions = $client->getViewOptions();
         if (empty($viewOptions['widget'])) {
@@ -213,6 +221,22 @@ class AuthChoice extends Widget
         }
     }
 
+
+
+    public function renderIcon($type)
+    {
+        if ($type == 'vkontakte') {
+            $type = 'vk';
+        }
+        echo Html::beginTag('div', ['class' => 'col-xs-2 col-xs-offset-1 control-label']);
+        echo Html::beginTag('span', ['class' => 'img-bordered']);
+        echo Html::beginTag('svg', ['class' => 'icon']);
+        echo Html::beginTag('use', ['xlink:href' => '#' . $type]);
+        echo Html::endTag('use');
+        echo Html::endTag('svg');
+        echo Html::endTag('span');
+        echo Html::endTag('div');
+    }
     /**
      * Composes client auth URL.
      * @param ClientInterface $provider external auth client instance.
@@ -230,11 +254,44 @@ class AuthChoice extends Widget
     /**
      * Renders the main content, which includes all external services links.
      */
+    protected function renderLinksContent($model)
+    {
+        foreach ($this->getClients() as $externalService) {
+            $social = $externalService->getName();
+
+            echo Html::beginTag('div', ['class' => 'form-group']);
+            echo $this->renderIcon($social);
+            echo Html::beginTag('div', ['class' => 'col-xs-6']);
+            echo Html::beginTag('span', ['id' => $social . '-profile']);
+            if ($model->$social != null && $model->$social != '') {
+                echo 'Подключен' . ' ';
+                echo '<strong>' . $model->$social . '</strong> ';
+                echo Html::endTag('span');
+                echo Html::a(\Yii::t('socials', 'Подключить'), $this->createClientUrl($externalService), ['class' => "btn btn-primary", 'id' => $social . '-link', 'style'=>'display:none;']);
+                echo Html::button(\Yii::t('socials', 'Отключить'), ['class' => "btn btn-danger unlink", 'id' => $social . '-unlink']);
+            }
+            else {
+                echo 'Отключен' . ' ';
+                echo Html::endTag('span');
+                echo Html::a(\Yii::t('socials', 'Подключить'), $this->createClientUrl($externalService), ['class' => "btn btn-primary", 'id' => $social . '-link']);
+                echo Html::button(\Yii::t('socials', 'Отключить'), ['class' => "btn btn-danger unlink", 'id' => $social . '-unlink', 'style'=>'display:none;']);
+            }
+
+            echo Html::endTag('div');
+            echo Html::endTag('div');
+        }
+    }
+
+    /**
+     * Renders the main content, which includes all external services links.
+     */
     protected function renderMainContent()
     {
-        echo Html::beginTag('ul', ['class' => 'auth-clients clear']);
+        //echo Html::beginTag('ul', ['class' => 'auth-clients clear']);
+        echo Html::beginTag('ul', ['class' => 'list-inline']);
         foreach ($this->getClients() as $externalService) {
-            echo Html::beginTag('li', ['class' => 'auth-client']);
+            //echo Html::beginTag('li', ['class' => 'auth-client']);
+            echo Html::beginTag('li');
             $this->clientLink($externalService);
             echo Html::endTag('li');
         }
@@ -263,7 +320,12 @@ class AuthChoice extends Widget
     public function run()
     {
         if ($this->autoRender) {
-            $this->renderMainContent();
+            if ($this->type == 'links') {
+                $this->renderLinksContent($this->model);
+            }
+            else {
+                $this->renderMainContent();
+            }
         }
         echo Html::endTag('div');
     }
